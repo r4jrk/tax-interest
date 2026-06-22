@@ -1,10 +1,6 @@
 package pl.net.brach;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -21,17 +17,29 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.scene.control.Button;
 import javafx.util.StringConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import pl.net.brach.commons.data.InterestRateRepository;
+import pl.net.brach.commons.nbp.NbpClient;
+import pl.net.brach.commons.nbp.NbpUnavailableException;
+import pl.net.brach.commons.ui.Dialogs;
+import pl.net.brach.commons.ui.R4TechBannerView;
 
 public class MainWindowController implements Initializable {
 
-    private static final int DAYS_IN_A_YEAR = 365;
-    private static final double INTEREST_AMOUNT_THRESHOLD = 8.7; //8,70 zł
+    private static final int DAYS_IN_A_YEAR = 365; // Polish tax convention: a fixed 365-day year (ignores leap years)
+    private static final double INTEREST_AMOUNT_THRESHOLD = 8.7; //8,70 zł — statutory minimum below which interest is waived
     private static final List<String> DATE_FORMATS = Arrays.asList("dd-MM-yyyy", "dd/MM/yyyy", "ddMMyyyy", "dd.MM.yyyy",
             "yyyy-MM-dd", "yyyy/MM/dd", "yyyyMMdd", "yyyy.MM.dd");
-    private static final String NBP_API_LINK = "http://api.nbp.pl/api/exchangerates/rates/a/EUR/";
+
+    private static final Logger log = LoggerFactory.getLogger(MainWindowController.class);
+
+    private final NbpClient nbpClient = new NbpClient();
+    private final InterestRateRepository interestRateRepository = new InterestRateRepository();
 
     public DatePicker dpPaymentDeadline;
     public DatePicker dpPaymentDate;
@@ -41,6 +49,7 @@ public class MainWindowController implements Initializable {
     public Button bOK;
     public Button bClose;
     public AnchorPane apMain;
+    public StackPane bannerContainer;
 
     //Calculation fields
     private LocalDate effectivePaymentDeadline;
@@ -64,6 +73,8 @@ public class MainWindowController implements Initializable {
 
     @FXML
     public void initialize(URL url, ResourceBundle rb) {
+        bannerContainer.getChildren().add(new R4TechBannerView());
+
         //Populate interest rates in to a Combo Box
         cbInterestRate.getItems().clear();
         cbInterestRate.getItems().addAll("8,00 %");
@@ -75,8 +86,6 @@ public class MainWindowController implements Initializable {
         //Setup Date Pickers
         setupDatePicker(dpPaymentDeadline);
         setupDatePicker(dpPaymentDate);
-
-        new InterestRates();
     }
 
     private Stage getCurrentStage() {
@@ -109,10 +118,9 @@ public class MainWindowController implements Initializable {
 
         datePickerName.getEditor().textProperty().addListener(
                 (observable, oldValue, newValue) -> {
-                    if (!newValue.matches(".{11}")) {
-                        datePickerName.getEditor().setText(newValue.replaceAll("[^\\d,-\\/]{10}", ""));
-                    } else {
-                        datePickerName.getEditor().setText("");
+                    if (newValue.length() > 10) {
+                        // Cap at a full date (dd-MM-yyyy) instead of wiping the whole field.
+                        datePickerName.getEditor().setText(newValue.substring(0, 10));
                     }
                     if (dpPaymentDeadline.getEditor().getText() != null && !dpPaymentDeadline.getEditor().getText().isEmpty() &&
                             dpPaymentDate.getEditor().getText() != null && !dpPaymentDate.getEditor().getText().isEmpty()) {
@@ -134,7 +142,7 @@ public class MainWindowController implements Initializable {
                                 return DateTimeFormatter.ofPattern(pattern).format(date);
                             }
                         } catch (DateTimeException dte) {
-                            System.out.println("Format Error");
+                            log.debug("Nie udało się sformatować daty wg wzorca {}", pattern);
                         }
                     }
                 }
@@ -193,51 +201,20 @@ public class MainWindowController implements Initializable {
         }
     }
 
+    /**
+     * Rolls {@code date} forward to the nearest business day (a day NBP published rates for),
+     * covering weekends and holidays. Returns {@code null} if the NBP API can't be reached —
+     * callers already guard against {@code null}.
+     */
     private LocalDate checkForBankHolidays(LocalDate date) {
-        int RETRY_COUNT = 10;
-
-        int loopCount = 0;
-        String apiData = "";
-
-        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern(DATE_FORMATS.get(4), Locale.ENGLISH);
-
-        while (true) {
-            try {
-                //NBP API connection and data fetch
-                String formattedDate = date.format(dateFormat);
-
-                URL nbpApiURL = new URL(NBP_API_LINK + formattedDate + "/?format=json");
-
-                try (BufferedReader in = new BufferedReader(new InputStreamReader(nbpApiURL.openStream()))) {
-                    apiData = in.readLine();
-                }
-
-                if (null != apiData && !apiData.isEmpty()) {
-                    break;
-                }
-
-            } catch (FileNotFoundException ex) {
-                if (loopCount > RETRY_COUNT) {
-                    System.out.println("Przekroczono limit powtórzeń próby połączenia z API NBP.");
-                    break;
-                }
-                //Add one more day to cover the weekends and holidays
-                date = date.plusDays(1);
-                loopCount++;
-            } catch (MalformedURLException e) {
-                System.out.println("Niepoprawny adres URL do API NBP.");
-            } catch (IOException e) {
-                System.out.println("Wystąpił błąd podczas odczytywania danych z API NBP.");
-                if (loopCount > RETRY_COUNT) {
-                    System.out.println("Przekroczono limit powtórzeń próby połączenia z API NBP.");
-                    break;
-                }
-            }
+        try {
+            return nbpClient.nearestPublicationOnOrAfter(date);
+        } catch (NbpUnavailableException e) {
+            // Called on every keystroke during recalculation, so only log here; the OK action
+            // (displaySummary) surfaces a dialog when results can't be produced.
+            log.warn("Nie udało się ustalić dnia roboczego z API NBP dla {}: {}", date, e.getMessage());
+            return null;
         }
-
-        assert apiData != null;
-        return LocalDate.parse(apiData.substring(apiData.indexOf("effectiveDate") + 16, apiData.indexOf("[") + 51),
-                DateTimeFormatter.ofPattern(DATE_FORMATS.get(4)));
     }
 
     private void getAmountPaid() {
@@ -250,7 +227,7 @@ public class MainWindowController implements Initializable {
     }
 
     private void getEffectiveInterestRate() {
-        List<List<String>> ratesFromFile = new InterestRates().getInterestRates();
+        List<List<String>> ratesFromFile = interestRateRepository.getInterestRates();
 
         ArrayList daysSpentArrayList = new ArrayList();
         ArrayList ratesArrayList = new ArrayList();
@@ -299,8 +276,8 @@ public class MainWindowController implements Initializable {
                     periodCounter++;
                     nominalRate = Double.parseDouble(ratesFromFile.get(i).get(2));
 
-                    System.out.println("Rates period " + periodCounter + ": Start date: " + ratesPeriodStartDate
-                            + ", End date: " + ratesPeriodEndDate + ". Nominal rate: " + nominalRate);
+                    log.debug("Rates period {}: start {}, end {}, nominal rate {}",
+                            periodCounter, ratesPeriodStartDate, ratesPeriodEndDate, nominalRate);
 
                     long daysSpent;
 
@@ -309,7 +286,7 @@ public class MainWindowController implements Initializable {
                         daysLeftToSpend = daysLeftToSpend - daysSpent;
                         daysSpentArrayList.add(daysSpent);
                         ratesArrayList.add(Double.parseDouble(ratesFromFile.get(i).get(2)));
-                        System.out.println("Days spent in Period 1: " + daysSpent + ", " + "days left to spend: " + daysLeftToSpend);
+                        log.debug("Days spent in period 1: {}, days left to spend: {}", daysSpent, daysLeftToSpend);
                     } else { //Second or further period
                         daysInCurrentPeriod = ChronoUnit.DAYS.between(ratesPeriodStartDate, ratesPeriodEndDate);
                         boolean isDaysLeftToSpendPositive = (daysLeftToSpend - daysInCurrentPeriod) > 0;
@@ -319,13 +296,13 @@ public class MainWindowController implements Initializable {
                             daysLeftToSpend = daysLeftToSpend - daysSpent;
                             daysSpentArrayList.add(daysSpent);
                             ratesArrayList.add(Double.parseDouble(ratesFromFile.get(i).get(2)));
-                            System.out.println("Days spent in Period " + periodCounter + ": " + daysSpent + ", " + "days left to spend: " + daysLeftToSpend);
+                            log.debug("Days spent in period {}: {}, days left to spend: {}", periodCounter, daysSpent, daysLeftToSpend);
                         } else { //There won't be another period
                             daysSpent = daysLeftToSpend;
                             daysLeftToSpend = 0;
                             daysSpentArrayList.add(daysSpent);
                             ratesArrayList.add(Double.parseDouble(ratesFromFile.get(i).get(2)));
-                            System.out.println("Days spent in Period " + periodCounter + ": " + daysSpent + ", " + "days left to spend: " + daysLeftToSpend);
+                            log.debug("Days spent in period {}: {}, days left to spend: {}", periodCounter, daysSpent, daysLeftToSpend);
                             break;
                         }
                     }
@@ -417,13 +394,13 @@ public class MainWindowController implements Initializable {
 
                     TaxInterest.displaySummary(summaryParams);
                 } else if (daysDifference == 0) {
-                    System.out.println("Płatność wykonano w dniu wymagalności.");
+                    Dialogs.info("Brak odsetek", "Płatność wykonano w dniu wymagalności.");
                 } else {
-                    System.out.println("Płatność wykonano przed dniem wymagalności.");
+                    Dialogs.info("Brak odsetek", "Płatność wykonano przed dniem wymagalności.");
                 }
             }
         } else {
-            System.out.println("Wprowadzono niepełne dane.");
+            Dialogs.error("Niepełne dane", "Wprowadź termin płatności, datę zapłaty oraz zapłaconą kwotę.");
         }
     }
 

@@ -4,16 +4,15 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
+import pl.net.brach.commons.ui.Branding;
 
 import java.io.IOException;
 
 public class TaxInterest extends Application {
 
-    static final String BRACHSOFT_TITLE = "BRACHSoft - Odsetki podatkowe v.1.2";
-    static final String ICON_PATH = "pl/net/brach/brachicon.png";
+    static final String BRACHSOFT_TITLE = "r4_tech - Odsetki podatkowe v.1.2";
     static final String STYLE_PATH = "pl/net/brach/style.css";
 
     public static void main(String[] args) {
@@ -29,7 +28,7 @@ public class TaxInterest extends Application {
         scene.getStylesheets().add(STYLE_PATH);
 
         stage.setTitle(BRACHSOFT_TITLE);
-        stage.getIcons().add(new Image(ICON_PATH));
+        Branding.applyIcon(stage);
         stage.setScene(scene);
         stage.setResizable(false);
         stage.show();
@@ -45,7 +44,7 @@ public class TaxInterest extends Application {
         Stage stage = new Stage();
 
         stage.setTitle(BRACHSOFT_TITLE + " - Podsumowanie");
-        stage.getIcons().add(new Image(ICON_PATH));
+        Branding.applyIcon(stage);
         stage.setScene(scene);
         stage.setResizable(false);
 

@@ -12,6 +12,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
@@ -24,12 +25,7 @@
    <top>
       <HBox alignment="CENTER" prefHeight="60.0" prefWidth="380.0" BorderPane.alignment="CENTER">
          <Pane prefHeight="200.0" prefWidth="80.0"/>
-         <ImageView fitHeight="50.0" fitWidth="220.0" pickOnBounds="true" preserveRatio="true">
-            <cursor>
-               <Cursor fx:constant="DEFAULT"/>
-            </cursor>
-            <Image url="@brachlogo.png"/>
-         </ImageView>
+         <StackPane fx:id="bannerContainer" prefHeight="56.0" prefWidth="220.0"/>
          <Label id="lMainHeader" alignment="CENTER" prefHeight="35.0" prefWidth="278.0" text="Odsetki podatkowe">
             <font>
                <Font size="24.0"/>
