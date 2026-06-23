@@ -1,4 +1,4 @@
-package pl.net.brach;
+package net.r4tech;
 
 import java.io.IOException;
 import java.net.URL;
@@ -23,11 +23,12 @@ import javafx.scene.control.Button;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import pl.net.brach.commons.data.InterestRateRepository;
-import pl.net.brach.commons.nbp.NbpClient;
-import pl.net.brach.commons.nbp.NbpUnavailableException;
-import pl.net.brach.commons.ui.Dialogs;
-import pl.net.brach.commons.ui.R4TechBannerView;
+import net.r4tech.commons.data.InterestRateRepository;
+import net.r4tech.commons.nbp.NbpClient;
+import net.r4tech.commons.nbp.NbpUnavailableException;
+import net.r4tech.commons.ui.Dialogs;
+import net.r4tech.commons.ui.ContactSupport;
+import net.r4tech.commons.ui.R4TechBannerView;
 
 public class MainWindowController implements Initializable {
 
@@ -73,7 +74,7 @@ public class MainWindowController implements Initializable {
 
     @FXML
     public void initialize(URL url, ResourceBundle rb) {
-        bannerContainer.getChildren().add(new R4TechBannerView());
+        bannerContainer.getChildren().add(new R4TechBannerView(true));
 
         //Populate interest rates in to a Combo Box
         cbInterestRate.getItems().clear();
@@ -408,5 +409,10 @@ public class MainWindowController implements Initializable {
     public void closeWindow() {
         Stage stage = (Stage) bClose.getScene().getWindow();
         stage.close();
+    }
+
+    @FXML
+    private void footerClicked() {
+        ContactSupport.emailAboutApp(TaxInterest.R4_TECH_TITLE);
     }
 }

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
@@ -16,26 +17,27 @@
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane prefHeight="391.0"
-            prefWidth="415.0"
+<BorderPane prefHeight="430.0"
+            prefWidth="484.0"
             stylesheets="@style.css"
             xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="pl.net.brach.MainWindowController">
+            fx:controller="net.r4tech.MainWindowController">
    <top>
-      <HBox alignment="CENTER" prefHeight="60.0" prefWidth="380.0" BorderPane.alignment="CENTER">
-         <Pane prefHeight="200.0" prefWidth="80.0"/>
-         <StackPane fx:id="bannerContainer" prefHeight="56.0" prefWidth="220.0"/>
-         <Label id="lMainHeader" alignment="CENTER" prefHeight="35.0" prefWidth="278.0" text="Odsetki podatkowe">
+      <HBox alignment="CENTER_LEFT" prefHeight="95.0" BorderPane.alignment="CENTER">
+         <padding>
+            <Insets left="11.0" right="10.0"/>
+         </padding>
+         <StackPane fx:id="bannerContainer" maxWidth="257.0" minWidth="257.0" prefWidth="257.0"/>
+         <Label id="lMainHeader" alignment="CENTER" maxWidth="Infinity" text="Odsetki podatkowe" wrapText="true" HBox.hgrow="ALWAYS">
             <font>
                <Font size="24.0"/>
             </font>
          </Label>
-         <Pane prefWidth="40.0"/>
       </HBox>
    </top>
    <center>
-      <AnchorPane fx:id="apMain" prefHeight="311.0" prefWidth="376.0" BorderPane.alignment="CENTER">
+      <AnchorPane fx:id="apMain" maxWidth="376.0" prefHeight="311.0" prefWidth="376.0" BorderPane.alignment="CENTER">
          <Label layoutX="3.0" layoutY="14.0" text="Termin płatności:">
             <font>
                <Font size="20.0"/>
@@ -87,7 +89,7 @@
       </AnchorPane>
    </center>
    <bottom>
-      <Label id="lFooter" opacity="0.2" text=" Copyright © 2021 Rafał Jurek - jurek.rafal@outlook.com" BorderPane.alignment="CENTER" />
+      <Label id="lFooter" onMouseClicked="#footerClicked" opacity="0.2" text=" Copyright © 2021-2026 R4_TECH Rafał Jurek - contact@r4tech.net" BorderPane.alignment="CENTER" />
    </bottom>
    <left>
       <AnchorPane prefHeight="200.0" prefWidth="19.0" BorderPane.alignment="CENTER" />

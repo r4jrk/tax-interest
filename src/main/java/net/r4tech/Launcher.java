@@ -1,4 +1,4 @@
-package pl.net.brach;
+package net.r4tech;
 
 /**
  * Entry point for the packaged (non-modular) application.

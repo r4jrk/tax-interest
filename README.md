@@ -13,9 +13,11 @@ mvn -pl tax-interest javafx:run
 
 ## Package
 
-```bash
-mvn -pl tax-interest -am -Pinstaller -DskipTests package
-# -> target/installer/r4_tech Odsetki podatkowe/
+This tool ships in the combined Windows installer (one `setup.exe`, pick which tools to install,
+shared Java runtime). Build it from the repo root — see [packaging/README.md](../packaging/README.md):
+
+```powershell
+pwsh -File packaging\build-installer.ps1
 ```
 
 ## Data files

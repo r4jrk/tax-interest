@@ -1,4 +1,4 @@
-package pl.net.brach;
+package net.r4tech;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -6,14 +6,15 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import pl.net.brach.commons.ui.Branding;
+import net.r4tech.commons.ui.Branding;
 
 import java.io.IOException;
 
 public class TaxInterest extends Application {
 
-    static final String BRACHSOFT_TITLE = "r4_tech - Odsetki podatkowe v.1.2";
-    static final String STYLE_PATH = "pl/net/brach/style.css";
+    static final String R4_TECH_TITLE = "R4_TECH - Odsetki podatkowe v.1.3";
+    static final String STYLE_PATH = "net/r4tech/style.css";
+    static final String APP_ICON = "/net/r4tech/tax-interest-icon.png";
 
     public static void main(String[] args) {
         launch();
@@ -27,8 +28,8 @@ public class TaxInterest extends Application {
         Scene scene = new Scene(root);
         scene.getStylesheets().add(STYLE_PATH);
 
-        stage.setTitle(BRACHSOFT_TITLE);
-        Branding.applyIcon(stage);
+        stage.setTitle(R4_TECH_TITLE);
+        Branding.applyIcon(stage, APP_ICON, TaxInterest.class);
         stage.setScene(scene);
         stage.setResizable(false);
         stage.show();
@@ -43,8 +44,8 @@ public class TaxInterest extends Application {
 
         Stage stage = new Stage();
 
-        stage.setTitle(BRACHSOFT_TITLE + " - Podsumowanie");
-        Branding.applyIcon(stage);
+        stage.setTitle(R4_TECH_TITLE + " - Podsumowanie");
+        Branding.applyIcon(stage, APP_ICON, TaxInterest.class);
         stage.setScene(scene);
         stage.setResizable(false);
 

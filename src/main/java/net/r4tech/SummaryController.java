@@ -1,4 +1,4 @@
-package pl.net.brach;
+package net.r4tech;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;

@@ -16,7 +16,7 @@
             stylesheets="@style.css"
             xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="pl.net.brach.SummaryController">
+            fx:controller="net.r4tech.SummaryController">
    <left>
       <HBox prefHeight="229.0" prefWidth="30.0" BorderPane.alignment="CENTER" />
    </left>

@@ -31,4 +31,9 @@
 #lFooter {
 	-fx-font-family: "Calibri";
     -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+#lFooter:hover {
+    -fx-underline: true;
 }
