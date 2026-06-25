@@ -6,8 +6,8 @@
 
     <parent>
         <groupId>net.r4tech</groupId>
-        <artifactId>r4-tech-tools</artifactId>
-        <version>1.0.0</version>
+        <artifactId>r4-tech-office-tools</artifactId>
+        <version>1.0.1</version>
     </parent>
 
     <artifactId>tax-interest</artifactId>
